@@ -19,7 +19,8 @@ const KakaoCallback = () => {
       return;
     }
 
-    axios.post('http://13.125.152.246:5000/auth/kakao/token', 
+    //  여기부터 수정됨
+    axios.post(`${import.meta.env.VITE_API_URL}/auth/kakao/token`, 
       { code },
       { headers: { 'Content-Type': 'application/json' } }
     )
@@ -37,7 +38,6 @@ const KakaoCallback = () => {
       alert('로그인 실패');
       navigate('/');
     });
-
   }, [navigate]);
 
   return <div>로그인 처리 중입니다...</div>;
