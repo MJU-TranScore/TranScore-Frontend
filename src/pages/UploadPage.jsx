@@ -26,7 +26,6 @@ export default function UploadPage({ onConverted }) {
     }
   }, [currentKey, shift]);
 
-
   const handleFileChange = async e => {
     const f = e.target.files[0];
     if (!f) return;
