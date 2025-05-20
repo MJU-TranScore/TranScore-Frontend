@@ -23,9 +23,18 @@ export default function App() {
   const requireLogin = tab => {
     if (!isLoggedIn) {
       alert('로그인이 필요합니다.');
-      return;
+      return false;
     }
     setActiveTab(tab);
+    return true;
+  };
+
+  const handleLoginRedirect = () => {
+    window.location.href =
+      `https://kauth.kakao.com/oauth/authorize` +
+      `?client_id=${import.meta.env.VITE_KAKAO_REST_API_KEY}` +
+      `&redirect_uri=${import.meta.env.VITE_KAKAO_REDIRECT_URI}` +
+      `&response_type=code`;
   };
 
   const handleLogin = () => {
