@@ -1,17 +1,32 @@
+// src/App.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import UploadPage    from './pages/UploadPage';
-import MyScoresPage  from './pages/MyScoresPage';
-import CommunityPage from './pages/CommunityPage';
+import { useNavigate }    from 'react-router-dom';
+import api                from './lib/api';
+import UploadPage         from './pages/UploadPage';
+import MyScoresPage       from './pages/MyScoresPage';
+import CommunityPage      from './pages/CommunityPage';
 
 export default function App() {
-  const [activeTab, setActiveTab]     = useState(null);
-  const [isLoggedIn, setIsLoggedIn]   = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
+  const [activeTab,    setActiveTab]    = useState(null);
+  const [isLoggedIn,   setIsLoggedIn]   = useState(false);
+  const [userProfile,  setUserProfile]  = useState(null);
+
   const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+
+    // 1) Kakao SDK 초기화
+    const jsKey = import.meta.env.VITE_KAKAO_JS_KEY;
+    if (!jsKey) {
+      console.error('🚨 VITE_KAKAO_JAVASCRIPT_KEY가 설정되지 않았습니다.');
+    } else if (window.Kakao && !window.Kakao.isInitialized()) {
+      window.Kakao.init(jsKey);
+      console.log('Kakao SDK 초기화 완료:', jsKey);
+    }
+
+    // 2) 로컬스토리지에 토큰/닉네임이 있으면 로그인 상태 유지
+
     const token = localStorage.getItem('accessToken');
     const nick  = localStorage.getItem('nickname');
     if (token && nick) {
@@ -36,11 +51,44 @@ export default function App() {
       `&response_type=code`;
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
+ const handleLogout = async () => {
+    // 1) 서버 로그아웃 요청
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.warn(
+        '서버 로그아웃 실패:',
+        err.response
+          ? `${err.response.status} ${JSON.stringify(err.response.data)}`
+          : err.message
+      );
+    }
+
+    // 2) 카카오 토큰이 있을 때만 SDK 로그아웃 호출
+    const kakaoToken =
+      window.Kakao &&
+      window.Kakao.Auth &&
+      window.Kakao.Auth.getAccessToken();
+    if (kakaoToken) {
+      window.Kakao.Auth.logout(() => {
+        console.log('Kakao JS SDK 로그아웃 완료');
+      });
+    } else {
+      console.log('카카오 토큰이 없어 SDK 로그아웃 호출 생략');
+    }
+
+    // 3) 클라이언트 저장소 비우기
+    sessionStorage.clear();  // ex. kakao_code_used
+    localStorage.clear();    // accessToken, refreshToken, nickname 등
+
+    // 4) React 상태 초기화
+    setShowDropdown(false);
     setIsLoggedIn(false);
     setUserProfile(null);
     setActiveTab(null);
+
+    // 5) (선택) 페이지 새로고침
+    // window.location.href = '/';
   };
 
   return (
@@ -62,6 +110,7 @@ export default function App() {
                   ? 'font-semibold text-blue-600'
                   : 'text-gray-600 hover:text-blue-500'
               }`}
+
             >
               악보 인식
             </button>
@@ -73,6 +122,7 @@ export default function App() {
                   : 'text-gray-600 hover:text-blue-500'
               }`}
             >
+
               마이페이지
             </button>
             <button
@@ -191,8 +241,9 @@ export default function App() {
         </div>
         <div className="bg-gray-100">
           <div className="container mx-auto px-6 py-2 text-center text-xs text-gray-600">
-            © 2025 TranScore. All rights reserved. 비상업적 이용은 무료로 제공되며,
-            상업적 이용 및 API 연동 시 별도 라이선스가 필요합니다.
+
+            © 2025 TranScore. All rights reserved.
+
           </div>
         </div>
       </footer>

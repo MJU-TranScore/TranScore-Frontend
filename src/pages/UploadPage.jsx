@@ -25,7 +25,6 @@ export default function UploadPage({ onConverted }) {
       setResultKey(transposeKey(currentKey, Number(shift)));
     }
   }, [currentKey, shift]);
-
   const handleFileChange = async e => {
     const f = e.target.files[0];
     if (!f) return;
@@ -37,16 +36,26 @@ export default function UploadPage({ onConverted }) {
       const up = await api.post('/score/upload', form, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const sid = up.data.score_id || up.data.id;
-      setScoreId(sid);
 
-      const info = await api.get(`/score/${sid}`);
-      setCurrentKey(info.data.key || 'C');
+      console.log('upload res:', up.data);
+
+      const sid = up.data.score_id || up.data.id;
+      console.log('scoreId =', sid);
+
+      try {
+        const info = await api.get(`/score/${sid}`);
+        console.log('score info:', info.data);
+        setCurrentKey(info.data.key || 'C');
+      } catch (metaErr) {
+        console.error('메타 조회 실패', metaErr.response?.status, metaErr.response?.data);
+        alert('메타 조회에 실패했습니다.');
+      }
     } catch (err) {
-      console.error(err);
-      alert('파일 업로드 또는 메타 조회에 실패했습니다.');
+      console.error('업로드 단계 에러', err);
+      alert('파일 업로드에 실패했습니다.');
     }
   };
+
 
   const handleShowResults = () => {
     if (!file) {
@@ -121,6 +130,7 @@ export default function UploadPage({ onConverted }) {
           onChange={handleFileChange}
         />
       </div>
+
 
       {file && (
         <>

@@ -1,19 +1,28 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+// vite.config.js
+import { defineConfig } from 'vite'
+import react            from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // auth, user, score, transform, mypage 는 백엔드로 프록시
+
+      // 1) 콜백 경로는 index.html 반환 → React Router로 처리
+      '/auth/kakao/callback': {
+        // target은 dev 서버 자신(localhost:5173)이지만,
+        // bypass 콜백에서 index.html 경로를 리턴
+        target: 'http://localhost:5173',
+        changeOrigin: true,
+        secure: false,
+        bypass: () => '/index.html',
+      },
+
+      // 2) 나머지 /auth/* 요청은 백엔드로
       '/auth': {
         target: 'http://13.125.152.246:5000',
         changeOrigin: true,
         secure: false,
-        bypass: req => {
-          // 카카오 콜백만 로컬 처리
-          if (req.url.startsWith('/auth/kakao/callback')) return req.url;
-        },
+
       },
       '/user': {
         target: 'http://13.125.152.246:5000',
@@ -35,17 +44,20 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      // result, community 등 로컬에 구현된 것은 아직 proxy 구현 X
+
+      // 필요시 /result 등도 추가
+
     }
   },
   build: {
     rollupOptions: {
       output: {
-        entryFileNames:     '[name].[hash].js',
-        chunkFileNames:     '[name].[hash].js',
-        assetFileNames:     '[name].[hash][extname]',
+        entryFileNames: '[name].[hash].js',
+        chunkFileNames: '[name].[hash].js',
+        assetFileNames: '[name].[hash][extname]',
+
       }
     }
   },
   base: './',
-});
+})
