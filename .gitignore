@@ -26,3 +26,4 @@ dist-ssr
 # Env file
 .env
 src/.env
+

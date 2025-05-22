@@ -25,8 +25,6 @@ export default function UploadPage({ onConverted }) {
       setResultKey(transposeKey(currentKey, Number(shift)));
     }
   }, [currentKey, shift]);
-
-
   const handleFileChange = async e => {
     const f = e.target.files[0];
     if (!f) return;
@@ -38,6 +36,7 @@ export default function UploadPage({ onConverted }) {
       const up = await api.post('/score/upload', form, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+
       console.log('upload res:', up.data);
 
       const sid = up.data.score_id || up.data.id;
@@ -131,6 +130,7 @@ export default function UploadPage({ onConverted }) {
           onChange={handleFileChange}
         />
       </div>
+
 
       {file && (
         <>

@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+
       // 1) 콜백 경로는 index.html 반환 → React Router로 처리
       '/auth/kakao/callback': {
         // target은 dev 서버 자신(localhost:5173)이지만,
@@ -21,6 +22,7 @@ export default defineConfig({
         target: 'http://13.125.152.246:5000',
         changeOrigin: true,
         secure: false,
+
       },
       '/user': {
         target: 'http://13.125.152.246:5000',
@@ -42,7 +44,9 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+
       // 필요시 /result 등도 추가
+
     }
   },
   build: {
@@ -51,6 +55,7 @@ export default defineConfig({
         entryFileNames: '[name].[hash].js',
         chunkFileNames: '[name].[hash].js',
         assetFileNames: '[name].[hash][extname]',
+
       }
     }
   },

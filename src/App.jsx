@@ -10,10 +10,12 @@ export default function App() {
   const [activeTab,    setActiveTab]    = useState(null);
   const [isLoggedIn,   setIsLoggedIn]   = useState(false);
   const [userProfile,  setUserProfile]  = useState(null);
+
   const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+
     // 1) Kakao SDK 초기화
     const jsKey = import.meta.env.VITE_KAKAO_JS_KEY;
     if (!jsKey) {
@@ -24,6 +26,7 @@ export default function App() {
     }
 
     // 2) 로컬스토리지에 토큰/닉네임이 있으면 로그인 상태 유지
+
     const token = localStorage.getItem('accessToken');
     const nick  = localStorage.getItem('nickname');
     if (token && nick) {
@@ -48,7 +51,7 @@ export default function App() {
       `&response_type=code`;
   };
 
-  const handleLogout = async () => {
+ const handleLogout = async () => {
     // 1) 서버 로그아웃 요청
     try {
       await api.post('/auth/logout');
@@ -107,6 +110,7 @@ export default function App() {
                   ? 'font-semibold text-blue-600'
                   : 'text-gray-600 hover:text-blue-500'
               }`}
+
             >
               악보 인식
             </button>
@@ -118,6 +122,7 @@ export default function App() {
                   : 'text-gray-600 hover:text-blue-500'
               }`}
             >
+
               마이페이지
             </button>
             <button
@@ -236,7 +241,9 @@ export default function App() {
         </div>
         <div className="bg-gray-100">
           <div className="container mx-auto px-6 py-2 text-center text-xs text-gray-600">
+
             © 2025 TranScore. All rights reserved.
+
           </div>
         </div>
       </footer>
