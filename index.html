@@ -1,19 +1,11 @@
-<!--JS KEY: 14f525362344895d6ec935ae6ff0d3cf-->
 <!DOCTYPE html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TranScore</title>
+    <!-- 카카오 JS SDK 불러오기 -->
     <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
-    <script>
-      window.onload = () => {
-        if (window.Kakao && !window.Kakao.isInitialized()) {
-          window.Kakao.init("14f525362344895d6ec935ae6ff0d3cf");
-          console.log("Kakao SDK 초기화됨:", Kakao.isInitialized());
-        }
-      };
-    </script>
   </head>
   <body>
     <div id="root"></div>
