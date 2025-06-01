@@ -8,7 +8,10 @@ export default function ResultPage() {
 
   const handleSaveToMypage = async () => {
     try {
-      await api.post(`/mypage/transpose/${resultId}/save`);
+      const token = localStorage.getItem("accessToken");
+      await api.post(`/mypage/result/${resultId}/save`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       alert('마이페이지에 저장되었습니다!');
     } catch (err) {
       console.error(err);

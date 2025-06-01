@@ -1,15 +1,51 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../lib/api';
 
-export default function UploadPage3({ xmlPath, pdfPath, scoreId, keySignature }) {
+export default function UploadPage3({ xmlPath, pdfPath, scoreId, keySignature, title }) {
+  const navigate = useNavigate();
+
+  // ✅ 업로드된 악보를 마이페이지에 자동 저장 (토큰 포함!)
+  useEffect(() => {
+    const saveScoreToMyPage = async () => {
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+          console.error('로그인 후 이용 가능합니다.');
+          return;
+        }
+
+        await api.post(
+          `/mypage/score/${scoreId}/save`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        console.log('마이페이지에 업로드된 악보가 저장되었습니다!');
+      } catch (err) {
+        console.error('마이페이지 저장 실패:', err);
+      }
+    };
+
+    // ✅ scoreId가 있을 때만 저장 요청!
+    if (scoreId) {
+      saveScoreToMyPage();
+    }
+  }, [scoreId]);
+
   const goHome = () => {
-    window.location.href = '/';
+    navigate('/');
   };
 
   const handleNavigate = (tab) => {
-    // 인식된 악보 정보를 로컬 스토리지에 저장
+    console.log('곡 제목:', title); // 디버깅 로그
     localStorage.setItem('latestScoreId', scoreId);
-    localStorage.setItem('latestKeySignature', keySignature || ''); // 혹시 키 정보도 저장할 수 있도록
-    window.location.href = `/${tab}`; // 각 기능 페이지로 이동
+    localStorage.setItem('latestKeySignature', keySignature || '');
+    localStorage.setItem('latestScoreTitle', title || '제목 없음');
+    navigate(`/${tab}`);
   };
 
   return (
@@ -22,16 +58,17 @@ export default function UploadPage3({ xmlPath, pdfPath, scoreId, keySignature })
         <p className="text-gray-700">
           PDF 파일 경로: <span className="text-blue-600">{pdfPath}</span>
         </p>
+        <p className="text-gray-700">
+          제목: <span className="text-blue-600 font-bold">{title || '제목 없음'}</span>
+        </p>
       </div>
 
-      {/* 키 정보 표시 */}
       {keySignature && (
         <p className="text-gray-700">
           악보 키: <span className="text-blue-600 font-bold">{keySignature}</span>
         </p>
       )}
 
-      {/* 기능 버튼 3개를 한 줄에 배치 */}
       <div className="flex justify-center space-x-4 mt-4">
         <button
           onClick={() => handleNavigate('key-change')}

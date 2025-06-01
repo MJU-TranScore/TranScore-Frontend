@@ -4,16 +4,17 @@ import { useNavigate } from "react-router-dom";
 
 export default function KeyChangePage() {
   const navigate = useNavigate();
-  const [currentKey, setCurrentKey] = useState("C"); // 기본: "C"
+  const [currentKey, setCurrentKey] = useState("C");
   const [shift, setShift] = useState(0);
   const [transposedKey, setTransposedKey] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState(null);
+  const [scoreTitle, setScoreTitle] = useState("");
 
-  // 최신 악보 정보 가져오기
   useEffect(() => {
     const latestScoreId = localStorage.getItem("latestScoreId");
     const latestKeySignature = localStorage.getItem("latestKeySignature");
+    const latestScoreTitle = localStorage.getItem("latestScoreTitle");
 
     if (!latestScoreId) {
       alert("먼저 악보를 업로드하고 인식해주세요.");
@@ -21,14 +22,12 @@ export default function KeyChangePage() {
       return;
     }
 
-    // localStorage에 저장된 값을 state로 세팅
     setCurrentKey(latestKeySignature || "C");
+    setScoreTitle(latestScoreTitle || "제목 정보 없음");
   }, [navigate]);
 
-  // 인식된 scoreId (저장된 값)
   const scoreId = localStorage.getItem("latestScoreId");
 
-  // 미리보기 API 호출
   useEffect(() => {
     const fetchPreview = async () => {
       try {
@@ -45,13 +44,11 @@ export default function KeyChangePage() {
       }
     };
 
-    // currentKey가 유효할 때만 호출
     if (currentKey) {
       fetchPreview();
     }
   }, [shift, currentKey]);
 
-  // 키 조정 핸들러
   const handleShiftChange = (amount) => {
     const newShift = shift + amount;
     if (newShift >= -6 && newShift <= 6) {
@@ -59,7 +56,6 @@ export default function KeyChangePage() {
     }
   };
 
-  // "변경하기" 버튼 클릭: 실제 키 변환 API 호출
   const handleTranspose = async () => {
     if (!scoreId) {
       alert("먼저 악보를 업로드해 주세요.");
@@ -68,12 +64,8 @@ export default function KeyChangePage() {
 
     try {
       const res = await api.post(`/score/${scoreId}/transpose`, { shift });
-      console.log("키 변환 요청 응답:", res.data); // 👉 확인용 콘솔로그
       if (res.status === 201) {
         const { result_id } = res.data;
-        console.log("받은 result_id:", result_id); // 👉 확인용 콘솔로그
-
-        // 👉 여기서 올바른 라우트로 이동!
         navigate(`/key-change/${scoreId}/result/${result_id}`);
       } else {
         alert("키 변경에 실패했습니다.");
@@ -86,9 +78,13 @@ export default function KeyChangePage() {
 
   return (
     <div className="max-w-2xl mx-auto bg-white p-8 mt-8 rounded-lg shadow text-center">
-      <h2 className="text-2xl font-bold mb-4">키 변경</h2>
+      <h2 className="text-2xl font-bold mb-2">키 변경</h2>
 
-      {/* 현재 키 */}
+      {/* 악보 제목 정보 표시 */}
+      <p className="text-gray-700 mb-4">
+        현재 곡: <span className="font-semibold text-blue-600">{scoreTitle}</span>
+      </p>
+
       <div className="mb-4">
         <label className="block mb-1 text-gray-700 font-medium">현재 키</label>
         <input
@@ -99,7 +95,6 @@ export default function KeyChangePage() {
         />
       </div>
 
-      {/* 반음 이동 */}
       <div className="mb-4 flex justify-center items-center space-x-4">
         <button
           onClick={() => handleShiftChange(-1)}
@@ -116,7 +111,6 @@ export default function KeyChangePage() {
         </button>
       </div>
 
-      {/* 미리보기 */}
       <div className="mb-4">
         {error ? (
           <p className="text-red-500">{error}</p>
@@ -130,7 +124,6 @@ export default function KeyChangePage() {
         )}
       </div>
 
-      {/* 버튼 */}
       <div className="flex justify-center space-x-4 mt-6">
         <button
           onClick={() => navigate("/")}

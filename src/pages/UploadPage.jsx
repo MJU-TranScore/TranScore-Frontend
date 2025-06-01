@@ -5,7 +5,7 @@ import UploadPage3 from './UploadPage3';
 
 export default function UploadPage() {
   const fileRef = useRef();
-  const [stage, setStage] = useState('form'); // 'form' | 'results' | 'recognized'
+  const [stage, setStage] = useState('form');
   const [title, setTitle] = useState('');
   const [timeSignature, setTimeSignature] = useState('');
   const [file, setFile] = useState(null);
@@ -13,7 +13,7 @@ export default function UploadPage() {
   const [scoreId, setScoreId] = useState(null);
   const [xmlPath, setXmlPath] = useState('');
   const [pdfPath, setPdfPath] = useState('');
-  const [keySignature, setKeySignature] = useState(''); // 👈 추가!
+  const [keySignature, setKeySignature] = useState('');
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -60,8 +60,7 @@ export default function UploadPage() {
 
       setXmlPath(response.data.xml_path);
       setPdfPath(response.data.pdf_path);
-      setKeySignature(response.data.key); // 👈 추가: 인식된 키 저장
-
+      setKeySignature(response.data.key);
       setStage('recognized');
     } catch (err) {
       console.error('인식 에러:', err);
@@ -84,8 +83,9 @@ export default function UploadPage() {
       <UploadPage3
         xmlPath={xmlPath}
         pdfPath={pdfPath}
-        scoreId={scoreId} // 👈 scoreId 전달
-        keySignature={keySignature} // 👈 인식된 키 전달
+        scoreId={scoreId}
+        keySignature={keySignature}
+        title={title} // ✅ 제목 전달 추가!
       />
     );
   }
