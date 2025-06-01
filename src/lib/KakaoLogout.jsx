@@ -9,14 +9,11 @@ export default function KakaoLogout() {
   useEffect(() => {
     (async () => {
       try {
-        // 서버 세션 무효화
         await api.post('/auth/logout');
       } catch (err) {
         console.warn('서버 로그아웃 실패', err.response?.status, err.response?.data);
       }
-      // 클라이언트 정리
       localStorage.clear();
-      // 홈으로 리다이렉트
       navigate('/');
     })();
   }, [navigate]);

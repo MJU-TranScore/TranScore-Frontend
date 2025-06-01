@@ -1,22 +1,22 @@
-// src/App.jsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate }    from 'react-router-dom';
-import api                from './lib/api';
-import UploadPage         from './pages/UploadPage';
-import MyScoresPage       from './pages/MyScoresPage';
-import CommunityPage      from './pages/CommunityPage';
+import React, { useState, useEffect, useRef } from 'react';
+import api from './lib/api';
+import UploadPage from './pages/UploadPage';
+import MyScoresPage from './pages/MyScoresPage';
+import CommunityPage from './pages/CommunityPage';
+import KeyChangePage from './pages/KeyChangePage';
+import LyricsExtractPage from './pages/LyricsExtractPage';
+import MelodyExtractPage from './pages/MelodyExtractPage';
 
 export default function App() {
-  const [activeTab,    setActiveTab]    = useState(null);
-  const [isLoggedIn,   setIsLoggedIn]   = useState(false);
-  const [userProfile,  setUserProfile]  = useState(null);
-
+  const [activeTab, setActiveTab] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const navigate = useNavigate();
+  const [showSubmenu, setShowSubmenu] = useState(false);
+
+  const submenuTimer = useRef(null);
 
   useEffect(() => {
-
-    // 1) Kakao SDK 초기화
     const jsKey = import.meta.env.VITE_KAKAO_JS_KEY;
     if (!jsKey) {
       console.error('🚨 VITE_KAKAO_JAVASCRIPT_KEY가 설정되지 않았습니다.');
@@ -25,17 +25,15 @@ export default function App() {
       console.log('Kakao SDK 초기화 완료:', jsKey);
     }
 
-    // 2) 로컬스토리지에 토큰/닉네임이 있으면 로그인 상태 유지
-
     const token = localStorage.getItem('accessToken');
-    const nick  = localStorage.getItem('nickname');
+    const nick = localStorage.getItem('nickname');
     if (token && nick) {
       setIsLoggedIn(true);
       setUserProfile({ nickname: nick, thumbnail: '/default-profile.png' });
     }
   }, []);
 
-  const requireLogin = tab => {
+  const requireLogin = (tab) => {
     if (!isLoggedIn) {
       alert('로그인이 필요합니다.');
       return;
@@ -51,8 +49,7 @@ export default function App() {
       `&response_type=code`;
   };
 
- const handleLogout = async () => {
-    // 1) 서버 로그아웃 요청
+  const handleLogout = async () => {
     try {
       await api.post('/auth/logout');
     } catch (err) {
@@ -64,7 +61,6 @@ export default function App() {
       );
     }
 
-    // 2) 카카오 토큰이 있을 때만 SDK 로그아웃 호출
     const kakaoToken =
       window.Kakao &&
       window.Kakao.Auth &&
@@ -77,107 +73,149 @@ export default function App() {
       console.log('카카오 토큰이 없어 SDK 로그아웃 호출 생략');
     }
 
-    // 3) 클라이언트 저장소 비우기
-    sessionStorage.clear();  // ex. kakao_code_used
-    localStorage.clear();    // accessToken, refreshToken, nickname 등
+    sessionStorage.clear();
+    localStorage.clear();
 
-    // 4) React 상태 초기화
     setShowDropdown(false);
     setIsLoggedIn(false);
     setUserProfile(null);
     setActiveTab(null);
+  };
 
-    // 5) (선택) 페이지 새로고침
-    // window.location.href = '/';
+  const handleSubmenuLeave = () => {
+    submenuTimer.current = setTimeout(() => {
+      setShowSubmenu(false);
+    }, 2000);
+  };
+
+  const handleSubmenuEnter = () => {
+    if (submenuTimer.current) {
+      clearTimeout(submenuTimer.current);
+    }
+    setShowSubmenu(true);
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <header className="bg-white shadow">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <h1
-            className="text-2xl font-bold text-gray-800 cursor-pointer"
-            onClick={() => setActiveTab(null)}
-          >
-            TranScore
-          </h1>
-
-          <nav className="flex items-center space-x-6">
-            <button
-              onClick={() => requireLogin('upload')}
-              className={`transition ${
-                activeTab === 'upload'
-                  ? 'font-semibold text-blue-600'
-                  : 'text-gray-600 hover:text-blue-500'
-              }`}
-
+        <div className="container mx-auto px-6 py-7 flex justify-between items-center">
+          <div className="flex items-center space-x-8">
+            <h1
+              className="text-3xl font-bold text-gray-800 cursor-pointer"
+              onClick={() => setActiveTab(null)}
             >
-              악보 인식
-            </button>
-            <button
-              onClick={() => requireLogin('my-scores')}
-              className={`transition ${
-                activeTab === 'my-scores'
-                  ? 'font-semibold text-blue-600'
-                  : 'text-gray-600 hover:text-blue-500'
-              }`}
-            >
-
-              마이페이지
-            </button>
-            <button
-              onClick={() => setActiveTab('community')}
-              className={`transition ${
-                activeTab === 'community'
-                  ? 'font-semibold text-blue-600'
-                  : 'text-gray-600 hover:text-blue-500'
-              }`}
-            >
-              커뮤니티
-            </button>
-
-            {isLoggedIn ? (
-              <div className="relative">
+              TranScore
+            </h1>
+            <nav className="flex space-x-6 relative">
+              <div
+                className="relative"
+                onMouseEnter={handleSubmenuEnter}
+                onMouseLeave={handleSubmenuLeave}
+              >
                 <button
-                  className="flex items-center space-x-2"
-                  onClick={() => setShowDropdown(v => !v)}
+                  onClick={() => requireLogin('upload')}
+                  className={`font-medium transition ${
+                    activeTab === 'upload'
+                      ? 'text-blue-600'
+                      : 'text-gray-800 hover:text-blue-600'
+                  }`}
                 >
-                  <img
-                    src={userProfile.thumbnail}
-                    alt="profile"
-                    className="w-8 h-8 rounded-full"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    {userProfile.nickname}
-                  </span>
+                  악보 인식
                 </button>
-                {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-36 bg-white border rounded shadow-lg z-10">
+                {showSubmenu && (
+                  <div
+                    className="absolute left-0 mt-2 w-40 bg-white border rounded shadow z-10"
+                    onMouseEnter={handleSubmenuEnter}
+                    onMouseLeave={handleSubmenuLeave}
+                  >
                     <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                      onClick={() => setActiveTab('key-change')}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                     >
-                      로그아웃
+                      키 변경
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('lyrics-extract')}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      가사 추출
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('melody-extract')}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      멜로디 추출
                     </button>
                   </div>
                 )}
               </div>
-            ) : (
               <button
-                onClick={handleLogin}
-                className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-1 rounded"
+                onClick={() => requireLogin('my-scores')}
+                className={`font-medium transition ${
+                  activeTab === 'my-scores'
+                    ? 'text-blue-600'
+                    : 'text-gray-800 hover:text-blue-600'
+                }`}
               >
-                로그인
+                마이페이지
               </button>
-            )}
-          </nav>
+              <button
+                onClick={() => setActiveTab('community')}
+                className={`font-medium transition ${
+                  activeTab === 'community'
+                    ? 'text-blue-600'
+                    : 'text-gray-800 hover:text-blue-600'
+                }`}
+              >
+                커뮤니티
+              </button>
+            </nav>
+          </div>
+
+          {isLoggedIn ? (
+            <div className="relative">
+              <button
+                className="flex items-center space-x-2"
+                onClick={() => setShowDropdown((v) => !v)}
+              >
+                <img
+                  src={userProfile.thumbnail}
+                  alt="profile"
+                  className="w-8 h-8 rounded-full"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  {userProfile.nickname}
+                </span>
+              </button>
+              {showDropdown && (
+                <div className="absolute right-0 mt-2 w-36 bg-white border rounded shadow z-10">
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={handleLogin}
+              className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-1 rounded"
+            >
+              로그인
+            </button>
+          )}
         </div>
       </header>
 
       <main className="flex-1 container mx-auto px-6 py-8">
-        {activeTab === 'upload'    && <UploadPage />}
+        {activeTab === 'upload' && <UploadPage />}
         {activeTab === 'my-scores' && <MyScoresPage />}
         {activeTab === 'community' && <CommunityPage />}
+        {activeTab === 'key-change' && <KeyChangePage />}
+        {activeTab === 'lyrics-extract' && <LyricsExtractPage />}
+        {activeTab === 'melody-extract' && <MelodyExtractPage />}
 
         {activeTab === null && (
           <>
@@ -202,29 +240,36 @@ export default function App() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-6">
-                간단한 이용 가이드
-              </h2>
+              <h2 className="text-2xl font-semibold mb-6">간단한 이용 가이드</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="p-6 bg-white rounded-lg shadow text-center">
                   <div className="text-3xl font-bold mb-2">1</div>
-                  <h3 className="font-medium mb-1">악보 업로드</h3>
+                  <h3 className="font-medium mb-1">악보 업로드 및 인식</h3>
                   <p className="text-sm text-gray-500">
-                    PDF 또는 이미지를 선택하여 업로드하세요.
+                    악보 이미지를 업로드하세요.
                   </p>
                 </div>
                 <div className="p-6 bg-white rounded-lg shadow text-center">
                   <div className="text-3xl font-bold mb-2">2</div>
-                  <h3 className="font-medium mb-1">반음 선택</h3>
+                  <h3 className="font-medium mb-1">기능 사용</h3>
                   <p className="text-sm text-gray-500">
-                    원하는 반음만큼 조정값을 선택합니다.
+                    원하는 만큼 키 변경이 가능하고,
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    가사만 따로 저장할 수 있으며,
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    멜로디도 들을 수 있습니다.
                   </p>
                 </div>
                 <div className="p-6 bg-white rounded-lg shadow text-center">
                   <div className="text-3xl font-bold mb-2">3</div>
-                  <h3 className="font-medium mb-1">다운로드</h3>
+                  <h3 className="font-medium mb-1">악보 추출</h3>
                   <p className="text-sm text-gray-500">
-                    변환된 악보를 즉시 다운로드합니다.
+                    변환된 악보를 추출하여
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    확인 및 다운로드 가능합니다.
                   </p>
                 </div>
               </div>
@@ -241,9 +286,7 @@ export default function App() {
         </div>
         <div className="bg-gray-100">
           <div className="container mx-auto px-6 py-2 text-center text-xs text-gray-600">
-
             © 2025 TranScore. All rights reserved.
-
           </div>
         </div>
       </footer>

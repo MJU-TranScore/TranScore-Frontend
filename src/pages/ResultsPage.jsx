@@ -12,6 +12,12 @@ export default function ResultsPage({
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
+    if (!scoreId) {
+      alert('scoreId가 존재하지 않습니다!');
+      console.error('scoreId is missing:', scoreId);
+      return;
+    }
+
     setLoading(true);
     try {
       await api.post(`/mypage/score/${scoreId}/save`);
@@ -19,7 +25,7 @@ export default function ResultsPage({
       const tid = tr.data.transpose_result_id;
       await api.post(`/mypage/transpose/${tid}/save`);
       alert('마이페이지에 저장되었습니다.');
-      onSave(); 
+      onSave();
     } catch (err) {
       console.error(err);
       alert('변환 또는 저장 중 오류가 발생했습니다.');

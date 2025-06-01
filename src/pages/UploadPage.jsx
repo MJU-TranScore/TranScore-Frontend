@@ -1,87 +1,93 @@
-import React, { useRef, useState, useEffect } from 'react'
-import api from '../lib/api'
-import ResultsPage from './ResultsPage'
+import React, { useRef, useState } from 'react';
+import api from '../lib/api';
+import UploadPage2 from './UploadPage2';
+import UploadPage3 from './UploadPage3';
 
-const KEY_LIST = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+export default function UploadPage() {
+  const fileRef = useRef();
+  const [stage, setStage] = useState('form'); // 'form' | 'results' | 'recognized'
+  const [title, setTitle] = useState('');
+  const [timeSignature, setTimeSignature] = useState('');
+  const [file, setFile] = useState(null);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState(null);
+  const [scoreId, setScoreId] = useState(null);
+  const [xmlPath, setXmlPath] = useState('');
+  const [pdfPath, setPdfPath] = useState('');
+  const [keySignature, setKeySignature] = useState(''); // 👈 추가!
 
-function transposeKey(originalKey, shift) {
-  const index = KEY_LIST.indexOf(originalKey)
-  return index < 0 ? originalKey : KEY_LIST[(index + shift + 12) % 12]
-}
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+    setFile(selectedFile);
 
-export default function UploadPage({ onConverted }) {
-  const fileRef = useRef()
-  const [stage, setStage] = useState('form')
-  const [title, setTitle] = useState('')
-  const [timeSignature, setTimeSignature] = useState('')
-  const [file, setFile] = useState(null)
-  const [scoreId, setScoreId] = useState(null)
-  const [currentKey, setCurrentKey] = useState('')
-  const [shift, setShift] = useState(0)
-  const [resultKey, setResultKey] = useState('')
+    const url = URL.createObjectURL(selectedFile);
+    setUploadedFileUrl(url);
+  };
 
-  useEffect(() => {
-    if (currentKey) {
-      setResultKey(transposeKey(currentKey, Number(shift)))
-    }
-  }, [currentKey, shift])
-
-  const handleFileChange = async (e) => {
-    const selectedFile = e.target.files[0]
-    if (!selectedFile) return
-    setFile(selectedFile)
-
-    try {
-      const formData = new FormData()
-      formData.append('file', selectedFile)
-
-      const response = await api.post('/score/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-
-      console.log('upload response:', response.data)
-
-      const id = response.data.score_id || response.data.id
-      setScoreId(id) // ✅ 상태 반영
-      console.log('scoreId =', id)
-
-      try {
-        const infoResponse = await api.get(`/score/${id}`)
-        console.log('score info:', infoResponse.data)
-        setCurrentKey(infoResponse.data.key || 'C')
-      } catch (infoErr) {
-        console.error('메타 조회 실패', infoErr.response?.status, infoErr.response?.data)
-        alert('메타 조회에 실패했습니다.')
-      }
-    } catch (err) {
-      console.error('업로드 단계 에러', err)
-      alert('파일 업로드에 실패했습니다.')
-    }
-  }
-
-  const handleShowResults = () => {
+  const handleShowResults = async () => {
     if (!file) {
-      alert('파일을 업로드해주세요.')
-      return
+      alert('파일을 업로드해주세요.');
+      return;
     }
     if (!title || !timeSignature) {
-      alert('제목과 박자를 모두 입력해주세요.')
-      return
+      alert('제목과 박자를 모두 입력해주세요.');
+      return;
     }
-    setStage('results')
-  }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await api.post('/score/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      console.log('upload response:', response.data);
+      const id = response.data.score_id;
+      setScoreId(id);
+
+      setStage('results');
+    } catch (err) {
+      console.error('업로드 에러:', err);
+      alert('파일 업로드에 실패했습니다.');
+    }
+  };
+
+  const handleRecognize = async () => {
+    try {
+      const response = await api.post('/score/recognize', { score_id: scoreId });
+      console.log('recognize response:', response.data);
+
+      setXmlPath(response.data.xml_path);
+      setPdfPath(response.data.pdf_path);
+      setKeySignature(response.data.key); // 👈 추가: 인식된 키 저장
+
+      setStage('recognized');
+    } catch (err) {
+      console.error('인식 에러:', err);
+      alert('악보 인식에 실패했습니다.');
+    }
+  };
 
   if (stage === 'results') {
     return (
-      <ResultsPage
-        scoreId={scoreId}
-        currentKey={currentKey}
-        shift={shift}
-        resultKey={resultKey}
-        onEdit={() => setStage('form')}
-        onSave={onConverted}
+      <UploadPage2
+        fileUrl={uploadedFileUrl}
+        onBack={() => setStage('form')}
+        onRecognize={handleRecognize}
       />
-    )
+    );
+  }
+
+  if (stage === 'recognized') {
+    return (
+      <UploadPage3
+        xmlPath={xmlPath}
+        pdfPath={pdfPath}
+        scoreId={scoreId} // 👈 scoreId 전달
+        keySignature={keySignature} // 👈 인식된 키 전달
+      />
+    );
   }
 
   return (
@@ -132,36 +138,13 @@ export default function UploadPage({ onConverted }) {
       </div>
 
       {file && (
-        <>
-          <div className="flex items-center space-x-6">
-            <div>
-              <p className="text-sm text-gray-500">현재 Key</p>
-              <p className="text-xl font-semibold">{currentKey || '-'}</p>
-            </div>
-            <div>
-              <label className="text-sm text-gray-500">± 반음</label>
-              <input
-                type="number"
-                min={-7}
-                max={7}
-                value={shift}
-                onChange={(e) => setShift(e.target.value)}
-                className="w-20 border rounded px-2 py-1"
-              />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">변환 후 Key</p>
-              <p className="text-xl font-semibold">{resultKey || '-'}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleShowResults}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
-          >
-            결과 보기
-          </button>
-        </>
+        <button
+          onClick={handleShowResults}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+        >
+          결과 보기
+        </button>
       )}
     </div>
-  )
+  );
 }
