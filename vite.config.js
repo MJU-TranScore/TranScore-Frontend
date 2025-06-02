@@ -1,4 +1,3 @@
-// vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -6,7 +5,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // 콜백 경로는 React Router 처리
       '/auth/kakao/callback': {
         target: 'http://localhost:5173',
         changeOrigin: true,
@@ -39,6 +37,8 @@ export default defineConfig({
         secure: false,
       },
     },
+    // 🔥 SPA 새로고침 대응!
+    historyApiFallback: true,
   },
   build: {
     rollupOptions: {

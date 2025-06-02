@@ -5,6 +5,15 @@ import api from '../lib/api';
 export default function UploadPage3({ xmlPath, pdfPath, scoreId, keySignature, title }) {
   const navigate = useNavigate();
 
+  // ✅ 페이지 로드 시 최신 악보 정보를 localStorage에 저장!
+  useEffect(() => {
+    if (scoreId) {
+      localStorage.setItem('latestScoreId', scoreId);
+      localStorage.setItem('latestKeySignature', keySignature || '');
+      localStorage.setItem('latestScoreTitle', title || '제목 없음');
+    }
+  }, [scoreId, keySignature, title]);
+
   // ✅ 업로드된 악보를 마이페이지에 자동 저장 (토큰 포함!)
   useEffect(() => {
     const saveScoreToMyPage = async () => {
@@ -41,10 +50,6 @@ export default function UploadPage3({ xmlPath, pdfPath, scoreId, keySignature, t
   };
 
   const handleNavigate = (tab) => {
-    console.log('곡 제목:', title); // 디버깅 로그
-    localStorage.setItem('latestScoreId', scoreId);
-    localStorage.setItem('latestKeySignature', keySignature || '');
-    localStorage.setItem('latestScoreTitle', title || '제목 없음');
     navigate(`/${tab}`);
   };
 

@@ -1,12 +1,25 @@
+// src/pages/MyPage/MyPageTranspose.jsx
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../lib/api";
 
-export default function MyTransposePage() {
+export default function MyPageTranspose() {
   const [transposeResults, setTransposeResults] = useState([]);
+  const navigate = useNavigate();
 
   const fetchTransposeResults = async () => {
     try {
-      const res = await api.get("/mypage/result?type=transpose");
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        console.error("🚨 accessToken이 없습니다. 로그인이 필요합니다.");
+        return;
+      }
+
+      const res = await api.get("/mypage/result?type=transpose", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // ✅ 백엔드가 보내준 데이터에는 title/original_filename/key를 포함하고 있어야 함!
       setTransposeResults(res.data);
     } catch (err) {
       console.error("키 변환 결과 불러오기 실패:", err);
@@ -38,20 +51,52 @@ export default function MyTransposePage() {
     }
   };
 
+  const handleViewResult = (resultId) => {
+    navigate(`/result/transpose/${resultId}`);
+  };
+
   return (
-    <section>
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">키 변환 결과</h2>
+    <section className="max-w-4xl mx-auto">
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800">키 변환 결과</h2>
       {transposeResults.length > 0 ? (
-        <ul className="space-y-2">
+        <ul className="space-y-4">
           {transposeResults.map((r) => (
-            <li key={r.result_id} className="p-3 border rounded shadow-sm bg-white flex justify-between items-center">
-              <span>결과 ID: {r.result_id} (저장일: {new Date(r.saved_at).toLocaleString()})</span>
-              <button
-                onClick={() => handleDelete(r.result_id)}
-                className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                삭제
-              </button>
+            <li
+              key={r.result_id}
+              className="p-4 border rounded shadow-sm bg-white flex justify-between items-center"
+            >
+              {/* 왼쪽: 정보 */}
+              <div>
+                <div className="text-sm text-gray-500">ID: {r.result_id}</div>
+                <div className="text-lg font-semibold">
+                  {r.title || "제목 없음"}
+                </div>
+                <div className="text-sm text-gray-500">
+                  파일명: {r.original_filename || "없음"}
+                </div>
+                <div className="text-sm text-gray-500">
+                  저장일: {new Date(r.saved_at).toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-500">
+                  조성: {r.key || "없음"}
+                </div>
+              </div>
+
+              {/* 오른쪽: 버튼 */}
+              <div className="flex gap-2 flex-wrap mt-2 sm:mt-0">
+                <button
+                  onClick={() => handleViewResult(r.result_id)}
+                  className="px-3 py-1 border rounded text-sm hover:bg-gray-100"
+                >
+                  결과 보기
+                </button>
+                <button
+                  onClick={() => handleDelete(r.result_id)}
+                  className="px-3 py-1 border rounded text-sm text-red-500 hover:bg-red-100"
+                >
+                  삭제
+                </button>
+              </div>
             </li>
           ))}
         </ul>

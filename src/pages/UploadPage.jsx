@@ -33,19 +33,20 @@ export default function UploadPage() {
       alert('제목과 박자를 모두 입력해주세요.');
       return;
     }
-
+  
     try {
       const formData = new FormData();
       formData.append('file', file);
-
+      formData.append('title', title); // ✅ 제목도 전송!
+  
       const response = await api.post('/score/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-
+  
       console.log('upload response:', response.data);
       const id = response.data.score_id;
       setScoreId(id);
-
+  
       setStage('results');
     } catch (err) {
       console.error('업로드 에러:', err);

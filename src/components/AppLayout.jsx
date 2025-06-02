@@ -1,6 +1,6 @@
 // src/components/AppLayout.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import api from '../lib/api';
 
 export default function AppLayout() {
@@ -10,6 +10,12 @@ export default function AppLayout() {
   const [showSubmenu, setShowSubmenu] = useState(false);
   const submenuTimer = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ 페이지 이동 감지를 위해 추가
+
+  // ✅ 경로가 바뀔 때마다 드롭다운 닫기
+  useEffect(() => {
+    setShowSubmenu(false);
+  }, [location]);
 
   useEffect(() => {
     const jsKey = import.meta.env.VITE_KAKAO_JS_KEY;
