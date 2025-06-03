@@ -5,7 +5,6 @@ import api from '../lib/api';
 export default function UploadPage3({ xmlPath, pdfPath, scoreId, keySignature, title }) {
   const navigate = useNavigate();
 
-  // ✅ 페이지 로드 시 최신 악보 정보를 localStorage에 저장!
   useEffect(() => {
     if (scoreId) {
       localStorage.setItem('latestScoreId', scoreId);
@@ -14,7 +13,6 @@ export default function UploadPage3({ xmlPath, pdfPath, scoreId, keySignature, t
     }
   }, [scoreId, keySignature, title]);
 
-  // ✅ 업로드된 악보를 마이페이지에 자동 저장 (토큰 포함!)
   useEffect(() => {
     const saveScoreToMyPage = async () => {
       try {
@@ -39,40 +37,34 @@ export default function UploadPage3({ xmlPath, pdfPath, scoreId, keySignature, t
       }
     };
 
-    // ✅ scoreId가 있을 때만 저장 요청!
     if (scoreId) {
       saveScoreToMyPage();
     }
   }, [scoreId]);
 
-  const goHome = () => {
-    navigate('/');
-  };
-
-  const handleNavigate = (tab) => {
-    navigate(`/${tab}`);
-  };
+  const goHome = () => navigate('/');
+  const handleNavigate = (tab) => navigate(`/${tab}`);
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow text-center space-y-4">
+    <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow text-center space-y-6">
       <h2 className="text-2xl font-bold">악보가 정상적으로 인식되었습니다!</h2>
-      <div>
-        <p className="text-gray-700">
-          XML 파일 경로: <span className="text-blue-600">{xmlPath}</span>
-        </p>
-        <p className="text-gray-700">
-          PDF 파일 경로: <span className="text-blue-600">{pdfPath}</span>
-        </p>
-        <p className="text-gray-700">
-          제목: <span className="text-blue-600 font-bold">{title || '제목 없음'}</span>
-        </p>
-      </div>
 
-      {keySignature && (
-        <p className="text-gray-700">
-          악보 키: <span className="text-blue-600 font-bold">{keySignature}</span>
+      <div className="grid gap-2 text-sm text-gray-800">
+        <p>
+          XML 파일 경로: <span className="text-blue-600 font-semibold">{xmlPath}</span>
         </p>
-      )}
+        <p>
+          PDF 파일 경로: <span className="text-blue-600 font-semibold">{pdfPath}</span>
+        </p>
+        <p>
+          제목: <span className="text-blue-600 font-semibold">{title || '제목 없음'}</span>
+        </p>
+        {keySignature && (
+          <p>
+            악보 키: <span className="text-blue-600 font-semibold">{keySignature}</span>
+          </p>
+        )}
+      </div>
 
       <div className="flex justify-center space-x-4 mt-4">
         <button

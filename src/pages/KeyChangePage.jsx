@@ -10,6 +10,7 @@ export default function KeyChangePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState(null);
   const [scoreTitle, setScoreTitle] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // ✅ 추가
 
   useEffect(() => {
     const latestScoreId = localStorage.getItem("latestScoreId");
@@ -31,7 +32,7 @@ export default function KeyChangePage() {
   useEffect(() => {
     const fetchPreview = async () => {
       try {
-        const res = await api.post("transform/transpose-preview", {
+        const res = await api.post("/transform/transpose-preview", {
           current_key: currentKey,
           shift: shift,
         });
@@ -63,6 +64,7 @@ export default function KeyChangePage() {
     }
 
     try {
+      setIsLoading(true); // ✅ 시작
       const res = await api.post(`/score/${scoreId}/transpose`, { shift });
       if (res.status === 201) {
         const { result_id } = res.data;
@@ -73,6 +75,8 @@ export default function KeyChangePage() {
     } catch (err) {
       console.error(err);
       alert("키 변경 요청 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false); // ✅ 종료
     }
   };
 
@@ -80,7 +84,6 @@ export default function KeyChangePage() {
     <div className="max-w-2xl mx-auto bg-white p-8 mt-8 rounded-lg shadow text-center">
       <h2 className="text-2xl font-bold mb-2">키 변경</h2>
 
-      {/* 악보 제목 정보 표시 */}
       <p className="text-gray-700 mb-4">
         현재 곡: <span className="font-semibold text-blue-600">{scoreTitle}</span>
       </p>
@@ -99,6 +102,7 @@ export default function KeyChangePage() {
         <button
           onClick={() => handleShiftChange(-1)}
           className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+          disabled={isLoading}
         >
           -1
         </button>
@@ -106,6 +110,7 @@ export default function KeyChangePage() {
         <button
           onClick={() => handleShiftChange(1)}
           className="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+          disabled={isLoading}
         >
           +1
         </button>
@@ -124,16 +129,22 @@ export default function KeyChangePage() {
         )}
       </div>
 
+      {isLoading && (
+        <p className="text-black font-semibold mb-4">키 변경중입니다. 잠시만 기다려주세요.</p>
+      )}
+
       <div className="flex justify-center space-x-4 mt-6">
         <button
           onClick={() => navigate("/")}
           className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded"
+          disabled={isLoading}
         >
           처음으로
         </button>
         <button
           onClick={handleTranspose}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+          disabled={isLoading}
         >
           변경하기
         </button>

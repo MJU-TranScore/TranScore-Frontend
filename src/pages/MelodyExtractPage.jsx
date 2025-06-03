@@ -8,6 +8,7 @@ export default function MelodyExtractPage() {
   const [resultId, setResultId] = useState(null);
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const [title, setTitle] = useState("");
   const [keySignature, setKeySignature] = useState("");
@@ -24,7 +25,18 @@ export default function MelodyExtractPage() {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
+
     setFile(selectedFile);
+    setHasError(false);
+
+    const rawName = selectedFile.name;
+    const withoutExt = rawName.replace(/\.[^/.]+$/, "");
+    const cleanTitle = withoutExt && withoutExt !== rawName ? withoutExt : "제목없음";
+
+    console.log("📁 파일명:", rawName);
+    console.log("📝 저장될 제목:", cleanTitle);
+
+    setTitle(cleanTitle);
   };
 
   const handleExtractMelody = async () => {
@@ -34,9 +46,9 @@ export default function MelodyExtractPage() {
     }
 
     setIsLoading(true);
+    setHasError(false);
 
     try {
-      // 1️⃣ 업로드
       const formData = new FormData();
       formData.append("file", file);
 
@@ -45,12 +57,10 @@ export default function MelodyExtractPage() {
         withCredentials: true,
       });
 
-      // 2️⃣ 최신 score 정보 가져오기
       const resInfo = await api.get("/transform/score/info");
       const scoreId = resInfo.data.score_id;
       setImageUrl(resInfo.data.imageUrl);
 
-      // 3️⃣ 멜로디 추출 (JSON으로 명시)
       const resMelody = await api.post(
         `/transform/score/${scoreId}/melody`,
         { start_measure: 1, end_measure: 9999 },
@@ -66,15 +76,19 @@ export default function MelodyExtractPage() {
       if (mp3Url) {
         setAudioUrl(`http://localhost:5000/${mp3Url}`);
         setResultId(resultId);
-        setTitle(resMelody.data.title || "");
         setKeySignature(resMelody.data.key_signature || "");
         setMidiPath(resMelody.data.midi_path || "");
+
+        await api.post(`/mypage/result/${resultId}/save`, {
+          title,
+        });
+        console.log("✅ 자동 저장 완료");
       } else {
-        alert("멜로디 추출 실패: 오디오 URL이 없습니다.");
+        setHasError(true);
       }
     } catch (err) {
       console.error("멜로디 추출 중 에러:", err.response?.data || err.message);
-      alert("멜로디 추출 실패: " + err.message);
+      setHasError(true);
     } finally {
       setIsLoading(false);
     }
@@ -115,7 +129,9 @@ export default function MelodyExtractPage() {
       return;
     }
     try {
-      await api.post(`/mypage/result/${resultId}/save`);
+      await api.post(`/mypage/result/${resultId}/save`, {
+        title,
+      });
       alert("마이페이지에 저장되었습니다!");
       navigate("/mypage");
     } catch (err) {
@@ -157,7 +173,9 @@ export default function MelodyExtractPage() {
             <p className="text-sm text-gray-400">클릭 또는 드래그</p>
           </>
         ) : (
-          <p className="text-gray-700">선택된 파일: <strong>{file.name}</strong></p>
+          <p className="text-gray-700">
+            선택된 파일: <strong>{file.name}</strong>
+          </p>
         )}
         <input
           ref={fileRef}
@@ -188,7 +206,7 @@ export default function MelodyExtractPage() {
         <div className="mt-4 text-center text-sm text-gray-600">
           <p><strong>제목:</strong> {title}</p>
           <p><strong>조성:</strong> {keySignature}</p>
-          <p><strong>MIDI 파일:</strong> {midiPath.split('/').pop()}</p>
+          <p><strong>MIDI 파일:</strong> {midiPath.split("/").pop()}</p>
         </div>
       )}
 
@@ -201,7 +219,6 @@ export default function MelodyExtractPage() {
             마이페이지에 저장
           </button>
         )}
-
         {audioUrl && (
           <button
             onClick={handleDownload}
@@ -213,11 +230,17 @@ export default function MelodyExtractPage() {
       </div>
 
       <div className="mt-6">
-        {isLoading ? (
+        {isLoading && (
           <p className="text-center text-gray-500">
             🎧 멜로디 추출 중입니다. 잠시만 기다려주세요...
           </p>
-        ) : audioUrl ? (
+        )}
+        {!isLoading && hasError && (
+          <p className="text-center text-red-500">
+            음원을 불러오는 데 실패했습니다.
+          </p>
+        )}
+        {!isLoading && audioUrl && (
           <div className="mt-4 bg-gray-100 p-4 rounded shadow-inner">
             <audio
               ref={audioRef}
@@ -236,7 +259,6 @@ export default function MelodyExtractPage() {
               <button
                 onClick={togglePlay}
                 className="p-4 rounded-full bg-gray-200 hover:bg-gray-300"
-                disabled={!audioUrl}
               >
                 {isPlaying ? "⏸️" : "▶️"}
               </button>
@@ -251,8 +273,6 @@ export default function MelodyExtractPage() {
               {formatTime(currentTime)} / {formatTime(duration)}
             </div>
           </div>
-        ) : (
-          <p className="text-center text-red-500">음원을 불러오는 데 실패했습니다.</p>
         )}
       </div>
     </div>

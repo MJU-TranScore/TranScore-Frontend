@@ -9,10 +9,10 @@ export default function AppLayout() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSubmenu, setShowSubmenu] = useState(false);
   const submenuTimer = useRef(null);
-  const navigate = useNavigate();
-  const location = useLocation(); // ✅ 페이지 이동 감지를 위해 추가
 
-  // ✅ 경로가 바뀔 때마다 드롭다운 닫기
+  const navigate = useNavigate();
+  const location = useLocation();
+
   useEffect(() => {
     setShowSubmenu(false);
   }, [location]);
@@ -70,8 +70,6 @@ export default function AppLayout() {
       window.Kakao.Auth.logout(() => {
         console.log('Kakao JS SDK 로그아웃 완료');
       });
-    } else {
-      console.log('카카오 토큰이 없어 SDK 로그아웃 호출 생략');
     }
 
     sessionStorage.clear();
@@ -83,22 +81,19 @@ export default function AppLayout() {
     navigate('/');
   };
 
+  const handleSubmenuEnter = () => {
+    if (submenuTimer.current) clearTimeout(submenuTimer.current);
+    setShowSubmenu(true);
+  };
+
   const handleSubmenuLeave = () => {
     submenuTimer.current = setTimeout(() => {
       setShowSubmenu(false);
-    }, 2000);
-  };
-
-  const handleSubmenuEnter = () => {
-    if (submenuTimer.current) {
-      clearTimeout(submenuTimer.current);
-    }
-    setShowSubmenu(true);
+    }, 50);
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* ✅ Header */}
       <header className="bg-white shadow">
         <div className="container mx-auto px-6 py-7 flex justify-between items-center">
           <div className="flex items-center space-x-8">
@@ -128,19 +123,19 @@ export default function AppLayout() {
                   >
                     <button
                       onClick={() => navigate('/key-change')}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      className="block w-full text-left px-4 py-2 hover:bg-sky-100"
                     >
                       키 변경
                     </button>
                     <button
                       onClick={() => navigate('/lyrics-extract')}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      className="block w-full text-left px-4 py-2 hover:bg-sky-100"
                     >
                       가사 추출
                     </button>
                     <button
                       onClick={() => navigate('/melody-extract')}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      className="block w-full text-left px-4 py-2 hover:bg-sky-100"
                     >
                       멜로디 추출
                     </button>
@@ -199,12 +194,10 @@ export default function AppLayout() {
         </div>
       </header>
 
-      {/* ✅ Main Content */}
       <main className="flex-1 container mx-auto px-6 py-8">
         <Outlet />
       </main>
 
-      {/* ✅ Footer */}
       <footer>
         <div className="bg-white">
           <div className="container mx-auto px-6 py-4 text-center text-gray-500">
