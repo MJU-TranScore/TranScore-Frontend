@@ -1,3 +1,4 @@
+// src/pages/KeyChangePage2.jsx
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -6,12 +7,10 @@ export default function KeyChangePage2() {
   const navigate = useNavigate();
 
   const handleGoToResults = () => {
-    // 결과 페이지로 이동
     navigate(`/result/transpose/${resultId}`);
   };
 
   const handleGoHome = () => {
-    // 처음으로
     navigate('/');
   };
 
@@ -20,7 +19,7 @@ export default function KeyChangePage2() {
       <h2 className="text-2xl font-bold mb-4 text-green-600">키 변경이 완료되었습니다!</h2>
       <p className="text-gray-700 mb-6">키 변경이 성공적으로 완료되었습니다. 결과를 확인해보세요!</p>
 
-      <div className="flex justify-center space-x-4 mt-6">
+      <div className="flex justify-center flex-wrap gap-4 mt-6">
         <button
           onClick={handleGoHome}
           className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded"

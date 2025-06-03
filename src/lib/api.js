@@ -12,6 +12,20 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // ✅ transform이 붙어야 할 경로만 지정
+  const transformPaths = [
+    /^\/score\/\d+\/melody$/,
+    /^\/score\/\d+\/lyrics$/,
+    /^\/score\/\d+\/transpose$/,
+    /^\/score\/upload$/,         // 변환 전용 업로드
+    /^\/score\/info$/,           // 최신 업로드 조회
+  ];
+
+  if (config.url && transformPaths.some((r) => r.test(config.url))) {
+    config.url = `/transform${config.url}`;
+  }
+
   return config;
 });
 
@@ -21,9 +35,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // 401 오류이면서, 재시도 플래그가 안 붙어있으면 refresh 시도
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true; // 무한 루프 방지
+      originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refreshToken');
@@ -32,7 +45,6 @@ api.interceptors.response.use(
           throw new Error('리프레시 토큰 없음');
         }
 
-        // ✅ refreshToken으로 새 accessToken 요청
         const res = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/auth/refresh`,
           { refresh_token: refreshToken }
@@ -41,17 +53,14 @@ api.interceptors.response.use(
         const newAccessToken = res.data.access_token;
         localStorage.setItem('accessToken', newAccessToken);
 
-        // ✅ 새로운 토큰으로 원래 요청을 다시 보냄
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return axios(originalRequest);
       } catch (refreshErr) {
         console.error('🔥 리프레시 토큰으로 accessToken 갱신 실패:', refreshErr);
-        // 갱신 실패 → 그대로 에러 반환 (로그인 페이지로 이동할 수도)
         return Promise.reject(refreshErr);
       }
     }
 
-    // 401 이외의 에러는 그대로 반환
     return Promise.reject(error);
   }
 );

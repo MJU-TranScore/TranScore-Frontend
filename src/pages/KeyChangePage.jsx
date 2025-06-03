@@ -31,7 +31,7 @@ export default function KeyChangePage() {
   useEffect(() => {
     const fetchPreview = async () => {
       try {
-        const res = await api.post("/transpose-preview", {
+        const res = await api.post("transform/transpose-preview", {
           current_key: currentKey,
           shift: shift,
         });
