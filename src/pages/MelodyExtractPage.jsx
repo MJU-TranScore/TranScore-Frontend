@@ -33,9 +33,6 @@ export default function MelodyExtractPage() {
     const withoutExt = rawName.replace(/\.[^/.]+$/, "");
     const cleanTitle = withoutExt && withoutExt !== rawName ? withoutExt : "제목없음";
 
-    console.log("📁 파일명:", rawName);
-    console.log("📝 저장될 제목:", cleanTitle);
-
     setTitle(cleanTitle);
   };
 
@@ -82,7 +79,6 @@ export default function MelodyExtractPage() {
         await api.post(`/mypage/result/${resultId}/save`, {
           title,
         });
-        console.log("✅ 자동 저장 완료");
       } else {
         setHasError(true);
       }
@@ -133,7 +129,6 @@ export default function MelodyExtractPage() {
         title,
       });
       alert("마이페이지에 저장되었습니다!");
-      navigate("/mypage");
     } catch (err) {
       console.error("마이페이지 저장 실패:", err);
       alert("저장 실패: " + err.message);
@@ -210,7 +205,7 @@ export default function MelodyExtractPage() {
         </div>
       )}
 
-      <div className="flex space-x-4 mt-4">
+      <div className="flex space-x-4 mt-4 justify-center">
         {resultId && (
           <button
             onClick={handleSaveToMyPage}
@@ -227,6 +222,12 @@ export default function MelodyExtractPage() {
             다운로드
           </button>
         )}
+        <button
+          onClick={() => navigate("/")}
+          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+        >
+          처음으로
+        </button>
       </div>
 
       <div className="mt-6">

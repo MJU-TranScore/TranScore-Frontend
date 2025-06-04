@@ -17,6 +17,8 @@ import KakaoLogout from "./lib/KakaoLogout";
 import KeyChangePage2 from "./pages/KeyChangePage2";
 import ResultPage from "./pages/ResultPage";
 import ScoreViewPage from "./pages/ScoreViewPage";
+import MyPageResult from "./pages/MyPageResult"; 
+
 
 export default function App() {
   useEffect(() => {
@@ -47,6 +49,10 @@ export default function App() {
         <Route path="lyrics-extract" element={<LyricsExtractPage />} />
         <Route path="melody-extract" element={<MelodyExtractPage />} />
         <Route path="score/view/:scoreId" element={<ScoreViewPage />} />
+
+        {/* ✅ 여기 추가! */}
+        <Route path="mypage/result/:resultId" element={<MyPageResult />} />
+
         <Route path="*" element={<NotFound />} />
       </Route>
 

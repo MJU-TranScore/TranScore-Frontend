@@ -7,6 +7,10 @@ export default function ResultPage() {
   const { resultId } = useParams();
   const navigate = useNavigate();
 
+  const handleGoHome = () => {
+    navigate('/');
+  };
+
   const handleSaveToMypage = async () => {
     try {
       const token = localStorage.getItem("accessToken");
@@ -18,15 +22,12 @@ export default function ResultPage() {
       await api.post(`/mypage/result/${resultId}/save`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert('마이페이지에 저장되었습니다!');
-    } catch (err) {
-      console.error(err);
-      alert('저장 실패: ' + err.message);
-    }
-  };
 
-  const handleGoHome = () => {
-    navigate('/');
+      alert("마이페이지에 저장되었습니다!");
+    } catch (err) {
+      console.error("마이페이지 저장 실패:", err);
+      alert("저장에 실패했습니다.");
+    }
   };
 
   return (
@@ -48,7 +49,6 @@ export default function ResultPage() {
           다운로드
         </a>
 
-        {/* ✅ 항상 저장 버튼 표시 */}
         <button
           onClick={handleSaveToMypage}
           className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded"
@@ -65,4 +65,4 @@ export default function ResultPage() {
       </div>
     </div>
   );
-}   
+}
